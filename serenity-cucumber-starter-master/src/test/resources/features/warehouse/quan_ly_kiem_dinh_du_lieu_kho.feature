@@ -36,8 +36,8 @@ Feature: Kiểm soát tính toàn vẹn dữ liệu kho và kiểm định đi�
     Scenario Outline: Sản phẩm mang nhãn "Mọi loại da" tự động kế thừa và xuất hiện trên tất cả các bộ lọc da đơn lẻ
       Given sản phẩm "Kem Chống Nắng Toàn Diện" đang ở trạng thái "Đang mở bán"
       And sản phẩm được gán nhãn bao hàm "Mọi loại da"
-      When khách hàng tìm kiếm sản phẩm theo tiêu chí phân loại da <Bo_Loc_Da>
-      Then hệ thống tự động kế thừa và hiển thị sản phẩm "Kem Chống Nắng Toàn Diện" trong kết quả lọc <Bo_Loc_Da>
+      When khách hàng tìm kiếm sản phẩm theo tiêu chí phân loại da "<Bo_Loc_Da>"
+      Then hệ thống tự động kế thừa và hiển thị sản phẩm "Kem Chống Nắng Toàn Diện" trong kết quả lọc "<Bo_Loc_Da>"
 
       Examples:
         | Bo_Loc_Da   |
