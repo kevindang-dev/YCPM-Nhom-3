@@ -46,7 +46,7 @@ public class PublishingGatekeeper {
             productRepository.save(product);
             return new PublishingResponse(
                     false,
-                    "Sản phẩm phải có ít nhất một nhãn loại da xác định trước khi mở bán",
+                    "Từ chối mở bán: Vui lòng chọn ít nhất một nhãn loại da phù hợp",
                     product
             );
         }
@@ -57,7 +57,7 @@ public class PublishingGatekeeper {
 
         return new PublishingResponse(
                 true,
-                "Xuất bản sản phẩm thành công và đủ điều kiện phân loại da",
+                "Xuất bản sản phẩm thành công",
                 product
         );
     }

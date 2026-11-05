@@ -53,7 +53,18 @@ public class HazardDictionary {
     }
 
     public void addEntry(String category, String inciName, String alias, WarningFlag flag) {
-        hazardEntries.add(new HazardEntry(category, inciName, alias, flag));
+        String cleanInci = inciName != null ? inciName.trim() : "";
+        String cleanAlias = alias != null ? alias.trim() : "";
+        if (cleanAlias.isEmpty()) {
+            if ("Alcohol Denat".equalsIgnoreCase(cleanInci)) {
+                cleanAlias = "Denatured Alcohol";
+            } else if ("Ethanol".equalsIgnoreCase(cleanInci)) {
+                cleanAlias = "Ethyl Alcohol";
+            } else if ("Fragrance".equalsIgnoreCase(cleanInci)) {
+                cleanAlias = "Parfum";
+            }
+        }
+        hazardEntries.add(new HazardEntry(category, cleanInci, cleanAlias, flag));
     }
 
     public boolean isSafeFattyAlcohol(String ingredientName) {
