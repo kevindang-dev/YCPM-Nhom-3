@@ -1,7 +1,7 @@
 Feature: Warehouse Inventory Integrity and Product Publishing Gatekeeper
-  In order to eliminate the risk of customers purchasing products without skin type classification causing allergic reactions, protect the 25% repeat purchase rate, and reduce product return rates below 2%
-  As a Catalog and Inventory Admin
-  I want to enforce publishing gatekeeping rules, automate INCI ingredient parsing, and audit inventory data quality
+  In order to loại trừ rủi ro khách hàng mua nhầm sản phẩm thiếu nhãn da gây kích ứng, bảo vệ mục tiêu mua lại 25% và giảm khiếu nại đổi trả dưới 2%
+  As a Quản trị viên kho và danh mục sản phẩm (Catalog and Inventory Admin)
+  I want to thiết lập cơ chế kiểm định điều kiện mở bán, tự động bóc tách thành phần INCI và rà soát tồn kho dữ liệu
 
   Background:
     Given Quản trị viên đã đăng nhập vào hệ thống quản trị kho BeautyCare
@@ -14,19 +14,19 @@ Feature: Warehouse Inventory Integrity and Product Publishing Gatekeeper
   # =========================================================================
   # USER STORY 1: STOCK RELEASE & PUBLISHING GATEKEEPER
   # =========================================================================
-  Rule: A product must have at least one valid skin type tag to be eligible for publishing
+  Rule: Sản phẩm phải có tối thiểu một nhãn loại da xác định mới được cấp phép mở bán
 
     # 1.1 HAPPY PATH
-    Scenario: Successfully publish product when valid skin type tags are assigned
+    Scenario: Cấp phép mở bán thành công khi sản phẩm có đầy đủ nhãn loại da
       Given sản phẩm "Serum La Roche-Posay B5" trong kho đang ở trạng thái "Bản nháp"
-      And sản phẩm đã được gắn nhãn loại da gồm "Da khô", "Da nhạy cảm"
+      And sản phẩm "Serum La Roche-Posay B5" đã được gắn nhãn loại da gồm "Da khô", "Da nhạy cảm"
       When Quản trị viên thực hiện xuất bản sản phẩm "Serum La Roche-Posay B5"
-      Then trạng thái mở bán của sản phẩm phải là "Đang mở bán"
+      Then trạng thái mở bán của sản phẩm "Serum La Roche-Posay B5" phải là "Đang mở bán"
       And hệ thống đưa ra thông báo: "Xuất bản sản phẩm thành công"
-      And sản phẩm xuất hiện trong danh sách hiển thị của bộ lọc "Da nhạy cảm" ngoài website
+      And sản phẩm "Serum La Roche-Posay B5" xuất hiện trong danh sách hiển thị của bộ lọc "Da nhạy cảm" ngoài website
 
     # 1.2 ALTERNATE FLOW
-    Scenario Outline: Products tagged with All Skin Types automatically inherit to all specific filters
+    Scenario Outline: Sản phẩm mang nhãn bao hàm tự động tương thích với toàn bộ bộ lọc đơn lẻ
       Given sản phẩm "Sữa Rửa Mặt CeraVe" trong kho đang ở trạng thái "Đang mở bán" với nhãn "Mọi loại da"
       When khách hàng sử dụng bộ lọc tìm kiếm theo tiêu chí "<Bo_Loc_Khach_Chon>"
       Then sản phẩm "Sữa Rửa Mặt CeraVe" phải hiển thị trong kết quả là "<Trang_Thai_Hien_Thi>"
@@ -39,59 +39,59 @@ Feature: Warehouse Inventory Integrity and Product Publishing Gatekeeper
         | Da nhạy cảm       | Có xuất hiện        | Kế thừa an toàn cho da nhạy cảm  |
 
     # 1.3 EXCEPTION
-    Scenario: Reject publishing and enforce Draft status when skin type tags are missing
+    Scenario: Từ chối xuất bản và cưỡng chế trạng thái Bản nháp khi sản phẩm bỏ trống nhãn loại da
       Given sản phẩm "Kem Chống Nắng Anessa" trong kho đang ở trạng thái "Bản nháp"
-      And sản phẩm chưa được thiết lập bất kỳ nhãn loại da nào
+      And sản phẩm "Kem Chống Nắng Anessa" chưa được thiết lập bất kỳ nhãn loại da nào
       When Quản trị viên thực hiện xuất bản sản phẩm "Kem Chống Nắng Anessa"
       Then hệ thống từ chối cấp phép mở bán cho sản phẩm
-      And trạng thái của sản phẩm vẫn được giữ nguyên là "Bản nháp"
+      And trạng thái của sản phẩm "Kem Chống Nắng Anessa" vẫn được giữ nguyên là "Bản nháp"
       And hệ thống hiển thị cảnh báo: "Từ chối mở bán: Vui lòng chọn ít nhất một nhãn loại da phù hợp"
-      And sản phẩm không được xuất hiện trên thanh tìm kiếm ngoài website
+      And sản phẩm "Kem Chống Nắng Anessa" không được xuất hiện trên thanh tìm kiếm ngoài website
 
     # 1.4 EDGE CASE
-    Scenario: Automatically revoke publishing status if all skin type tags are removed
+    Scenario: Tự động thu hồi quyền mở bán nếu sản phẩm đang bán bị xóa sạch nhãn loại da
       Given sản phẩm "Toner Tràm Trà" trong kho đang ở trạng thái "Đang mở bán" với nhãn "Da dầu"
       When Quản trị viên cập nhật nhãn loại da của sản phẩm "Toner Tràm Trà" thành danh sách rỗng
       Then hệ thống từ chối lưu thay đổi rỗng
-      And tự động thu hồi quyền mở bán, chuyển trạng thái sản phẩm thành "Tạm ẩn"
-      And sản phẩm lập tức biến mất khỏi danh mục hiển thị ngoài website
+      And tự động thu hồi quyền mở bán, chuyển trạng thái sản phẩm "Toner Tràm Trà" thành "Tạm ẩn"
+      And sản phẩm "Toner Tràm Trà" lập tức biến mất khỏi danh mục hiển thị ngoài website
 
   # =========================================================================
   # USER STORY 2: AUTOMATED INCI PARSER & HAZARD INSPECTION
   # =========================================================================
-  Rule: Automatically distinguish drying alcohols from fatty alcohols and activate hazard flags
+  Rule: Tự động phân định chính xác cồn khô gây hại và cồn béo an toàn để kích hoạt cờ cảnh báo
 
     # 2.1 HAPPY PATH
-    Scenario: Parse raw ingredients and flag drying alcohol when Alcohol Denat is detected
+    Scenario: Tự động bóc tách chuỗi và kích hoạt cờ cảnh báo cồn khô khi phát hiện Alcohol Denat
       Given Quản trị viên nhập chuỗi thành phần cho sản phẩm "Toner Trị Mụn Some By Mi":
         """
         Water, Alcohol Denat, Salicylic Acid, Melaleuca Alternifolia Leaf Water
         """
       When hệ thống tiến hành thẩm định thành phần cho sản phẩm "Toner Trị Mụn Some By Mi"
-      Then hệ thống bóc tách thành công 4 hoạt chất riêng biệt
+      Then hệ thống bóc tách thành công 4 hoạt chất riêng biệt cho sản phẩm "Toner Trị Mụn Some By Mi"
       And kích hoạt cờ cảnh báo "Có chứa cồn khô" cho sản phẩm "Toner Trị Mụn Some By Mi"
 
     # 2.2 ALTERNATE FLOW
-    Scenario: Simultaneously trigger multiple warning flags when multiple hazardous ingredients exist
+    Scenario: Kích hoạt đồng thời nhiều cờ cảnh báo độc lập khi sản phẩm chứa nhiều chất nhạy cảm
       Given Quản trị viên nhập chuỗi thành phần cho sản phẩm "Kem Dưỡng Ban Đêm":
         """
         Aqua, Glycerin, Propylparaben, Fragrance, Dimethicone
         """
       When hệ thống tiến hành thẩm định thành phần cho sản phẩm "Kem Dưỡng Ban Đêm"
-      Then hệ thống kích hoạt đồng thời 2 cờ cảnh báo gồm "Chứa Paraben" và "Chứa hương liệu"
+      Then hệ thống kích hoạt đồng thời 2 cờ cảnh báo gồm "Chứa Paraben" và "Chứa hương liệu" cho sản phẩm "Kem Dưỡng Ban Đêm"
 
     # 2.3 EDGE CASE - SAFE FATTY ALCOHOL
-    Scenario: Correctly recognize safe fatty alcohols without triggering false drying alcohol warnings
+    Scenario: Nhận diện chính xác cồn béo dưỡng ẩm và không kích hoạt cảnh báo cồn khô
       Given Quản trị viên nhập chuỗi thành phần cho sản phẩm "Kem Dưỡng Ẩm Phục Hồi CeraVe":
         """
         Aqua, Cetearyl Alcohol, Stearyl Alcohol, Ceramide NP, Glycerin
         """
       When hệ thống tiến hành thẩm định thành phần cho sản phẩm "Kem Dưỡng Ẩm Phục Hồi CeraVe"
-      Then hệ thống xác nhận sản phẩm đạt trạng thái an toàn "Lành tính"
-      And tuyệt đối không kích hoạt cờ cảnh báo "Có chứa cồn khô"
+      Then hệ thống xác nhận sản phẩm "Kem Dưỡng Ẩm Phục Hồi CeraVe" đạt trạng thái an toàn "Lành tính"
+      And tuyệt đối không kích hoạt cờ cảnh báo "Có chứa cồn khô" cho sản phẩm "Kem Dưỡng Ẩm Phục Hồi CeraVe"
 
     # 2.4 EDGE CASE - ALIAS MATCHING
-    Scenario: Recognize hazardous ingredients via international cosmetic aliases
+    Scenario: Nhận diện hoạt chất cảnh báo dù nhà sản xuất sử dụng tên thương mại quốc tế
       Given Quản trị viên nhập chuỗi thành phần cho sản phẩm "Xịt Khoáng Cấp Ẩm":
         """
         Aqua, Denatured Alcohol, Nitrogen, Glycerin
@@ -103,10 +103,10 @@ Feature: Warehouse Inventory Integrity and Product Publishing Gatekeeper
   # =========================================================================
   # USER STORY 3: INVENTORY DATA AUDIT DASHBOARD
   # =========================================================================
-  Rule: Support rapid audit and in-place resolution for unclassified inventory data
+  Rule: Hệ thống hỗ trợ rà soát và khắc phục nhanh các sản phẩm lỗi dữ liệu sau khi nhập kho
 
     # 3.1 HAPPY PATH
-    Scenario: Accurately filter products missing skin type classification in inventory
+    Scenario: Lọc chính xác danh sách các sản phẩm đang thiếu nhãn loại da trong kho
       Given cơ sở dữ liệu kho đang lưu trữ 3 sản phẩm gồm:
         | Ten_San_Pham        | Nhan_Loai_Da | Trang_Thai   |
         | Serum B5 Phục Hồi   | Da khô       | Đang mở bán  |
@@ -117,14 +117,14 @@ Feature: Warehouse Inventory Integrity and Product Publishing Gatekeeper
       And danh sách kết quả chứa sản phẩm "Kem Dưỡng Trắng Da" và "Tẩy Tế Bào Chết AHA"
 
     # 3.2 ALTERNATE FLOW
-    Scenario: Quick-update skin type classification directly on the audit dashboard
+    Scenario: Cập nhật nhãn loại da nhanh tại chỗ trên bảng kiểm toán dữ liệu
       Given sản phẩm "Kem Dưỡng Trắng Da" đang nằm trong danh sách cảnh báo thiếu nhãn da
       When Quản trị viên thực hiện cập nhật nhanh nhãn loại da "Da dầu" cho sản phẩm "Kem Dưỡng Trắng Da"
       Then sản phẩm "Kem Dưỡng Trắng Da" tự động biến mất khỏi danh sách cảnh báo thiếu nhãn da
       And nhãn loại da của sản phẩm "Kem Dưỡng Trắng Da" trong kho được ghi nhận là "Da dầu"
 
     # 3.3 EDGE CASE - REPORT EXPORT
-    Scenario: Export inventory data audit report to Excel for supplier feedback
+    Scenario: Xuất dữ liệu kiểm toán tồn kho phục vụ phản hồi nhà cung cấp
       Given có ít nhất một sản phẩm trong kho đang bị thiếu nhãn loại da
       When Quản trị viên yêu cầu kết xuất báo cáo kiểm toán dữ liệu kho
       Then hệ thống tạo ra tệp báo cáo dạng bảng tính với định dạng "XLSX"

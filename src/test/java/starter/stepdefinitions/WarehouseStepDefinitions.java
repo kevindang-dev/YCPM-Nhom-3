@@ -137,6 +137,20 @@ public class WarehouseStepDefinitions {
         productRepository.save(currentProduct);
     }
 
+    @Given("^sản phẩm \"([^\"]+)\" đã được gắn nhãn loại da gồm (.+)$")
+    public void san_pham_da_duoc_gan_nhan_loai_da_gom_voi_ten(String productName, String tagsString) {
+        currentProduct = productRepository.findByName(productName).orElseGet(() -> {
+            Product p = new Product(productName);
+            return productRepository.save(p);
+        });
+        Pattern pattern = Pattern.compile("\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(tagsString);
+        while (matcher.find()) {
+            currentProduct.addSkinType(SkinTypeTag.of(matcher.group(1)));
+        }
+        productRepository.save(currentProduct);
+    }
+
     @Given("^sản phẩm đã được gắn nhãn loại da gồm (.+)$")
     public void san_pham_da_duoc_gan_nhan_loai_da_gom(String tagsString) {
         assertThat(currentProduct).isNotNull();
@@ -157,6 +171,16 @@ public class WarehouseStepDefinitions {
                 currentProduct.addSkinType(SkinTypeTag.of(tag));
             }
         }
+        productRepository.save(currentProduct);
+    }
+
+    @Given("sản phẩm {string} chưa được thiết lập bất kỳ nhãn loại da nào")
+    public void san_pham_chua_duoc_thiet_lap_bat_ky_nhan_loai_da_nao_voi_ten(String productName) {
+        currentProduct = productRepository.findByName(productName).orElseGet(() -> {
+            Product p = new Product(productName);
+            return productRepository.save(p);
+        });
+        currentProduct.clearSkinTypes();
         productRepository.save(currentProduct);
     }
 
@@ -185,6 +209,13 @@ public class WarehouseStepDefinitions {
         quan_tri_vien_thuc_hien_xuat_ban_san_pham(productName);
     }
 
+    @Then("trạng thái mở bán của sản phẩm {string} phải là {string}")
+    public void trang_thai_mo_ban_cua_san_pham_phai_la_voi_ten(String productName, String expectedStatus) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
+    }
+
     @Then("trạng thái mở bán của sản phẩm phải là {string}")
     public void trang_thai_mo_ban_cua_san_pham_phai_la(String expectedStatus) {
         assertThat(currentProduct.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
@@ -194,6 +225,13 @@ public class WarehouseStepDefinitions {
     public void he_thong_dua_ra_thong_bao(String expectedMessage) {
         assertThat(lastPublishResponse).isNotNull();
         assertThat(lastPublishResponse.getMessage()).contains(expectedMessage);
+    }
+
+    @Then("sản phẩm {string} xuất hiện trong danh sách hiển thị của bộ lọc {string} ngoài website")
+    public void san_pham_xuat_hien_trong_danh_sach_hien_thi_cua_bo_loc_voi_ten(String productName, String filterCriterion) {
+        List<Product> products = publishingGatekeeper.searchProductsBySkinType(SkinTypeTag.of(filterCriterion));
+        List<String> names = products.stream().map(Product::getName).collect(Collectors.toList());
+        assertThat(names).contains(productName);
     }
 
     @Then("sản phẩm xuất hiện trong danh sách hiển thị của bộ lọc {string} ngoài website")
@@ -234,6 +272,13 @@ public class WarehouseStepDefinitions {
         he_thong_tu_choi_cap_phep_mo_ban_cho_san_pham();
     }
 
+    @Then("trạng thái của sản phẩm {string} vẫn được giữ nguyên là {string}")
+    public void trang_thai_cua_san_pham_van_duoc_giu_nguyen_la_voi_ten(String productName, String expectedStatus) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
+    }
+
     @Then("trạng thái của sản phẩm vẫn được giữ nguyên là {string}")
     public void trang_thai_cua_san_pham_van_duoc_giu_nguyen_la(String expectedStatus) {
         assertThat(currentProduct.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
@@ -247,6 +292,13 @@ public class WarehouseStepDefinitions {
     @Then("hệ thống hiển thị cảnh báo: {string}")
     public void he_thong_hien_thi_canh_bao(String expectedWarning) {
         assertThat(lastPublishResponse.getMessage()).isEqualTo(expectedWarning);
+    }
+
+    @Then("sản phẩm {string} không được xuất hiện trên thanh tìm kiếm ngoài website")
+    public void san_pham_khong_duoc_xuat_hien_tren_thanh_tim_kiem_voi_ten(String productName) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.isVisibleOnStorefront()).isFalse();
     }
 
     @Then("sản phẩm không được xuất hiện trên thanh tìm kiếm ngoài website")
@@ -268,9 +320,23 @@ public class WarehouseStepDefinitions {
         assertThat(currentProduct.getSkinTypes()).isEmpty();
     }
 
+    @Then("tự động thu hồi quyền mở bán, chuyển trạng thái sản phẩm {string} thành {string}")
+    public void tu_dong_thu_hoi_quyen_mo_ban_chuyen_trang_thai_voi_ten(String productName, String expectedStatus) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
+    }
+
     @Then("tự động thu hồi quyền mở bán, chuyển trạng thái sản phẩm thành {string}")
     public void tu_dong_thu_hoi_quyen_mo_ban_chuyen_trang_thai(String expectedStatus) {
         assertThat(currentProduct.getStatus().getVietnameseName()).isEqualTo(expectedStatus);
+    }
+
+    @Then("sản phẩm {string} lập tức biến mất khỏi danh mục hiển thị ngoài website")
+    public void san_pham_lap_tuc_bien_mat_khoi_danh_muc_voi_ten(String productName) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.isVisibleOnStorefront()).isFalse();
     }
 
     @Then("sản phẩm lập tức biến mất khỏi danh mục hiển thị ngoài website")
@@ -300,6 +366,14 @@ public class WarehouseStepDefinitions {
         currentProduct = p;
     }
 
+    @Then("hệ thống bóc tách thành công {int} hoạt chất riêng biệt cho sản phẩm {string}")
+    public void he_thong_boc_tach_thanh_cong_hoat_chat_rieng_biet_voi_ten(int count, String productName) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(lastParseResult).isNotNull();
+        assertThat(lastParseResult.getIngredients()).hasSize(count);
+    }
+
     @Then("hệ thống bóc tách thành công {int} hoạt chất riêng biệt")
     public void he_thong_boc_tach_thanh_cong_hoat_chat_rieng_biet(int count) {
         assertThat(lastParseResult).isNotNull();
@@ -312,6 +386,17 @@ public class WarehouseStepDefinitions {
         assertThat(p.hasWarningFlag(WarningFlag.of(flagName))).isTrue();
     }
 
+    @Then("hệ thống kích hoạt đồng thời {int} cờ cảnh báo gồm {string} và {string} cho sản phẩm {string}")
+    public void he_thong_kich_hoat_dong_thoi_co_canh_bao_voi_ten(int count, String flag1, String flag2, String productName) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(lastParseResult.getDetectedHazards()).hasSize(count);
+        assertThat(lastParseResult.getDetectedHazards()).containsKey(WarningFlag.of(flag1));
+        assertThat(lastParseResult.getDetectedHazards()).containsKey(WarningFlag.of(flag2));
+        assertThat(p.hasWarningFlag(WarningFlag.of(flag1))).isTrue();
+        assertThat(p.hasWarningFlag(WarningFlag.of(flag2))).isTrue();
+    }
+
     @Then("hệ thống kích hoạt đồng thời {int} cờ cảnh báo gồm {string} và {string}")
     public void he_thong_kich_hoat_dong_thoi_co_canh_bao(int count, String flag1, String flag2) {
         assertThat(lastParseResult.getDetectedHazards()).hasSize(count);
@@ -321,12 +406,29 @@ public class WarehouseStepDefinitions {
         assertThat(currentProduct.hasWarningFlag(WarningFlag.of(flag2))).isTrue();
     }
 
+    @Then("hệ thống xác nhận sản phẩm {string} đạt trạng thái an toàn {string}")
+    public void he_thong_xac_nhan_san_pham_dat_trang_thai_an_toan_voi_ten(String productName, String safetyState) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(lastParseResult.isAlcoholFree()).isTrue();
+        assertThat(lastParseResult.getDetectedSafeFattyAlcohols()).isNotEmpty();
+        p.addSafetyLabel(safetyState);
+        productRepository.save(p);
+    }
+
     @Then("hệ thống xác nhận sản phẩm đạt trạng thái an toàn {string}")
     public void he_thong_xac_nhan_san_pham_dat_trang_thai_an_toan(String safetyState) {
         assertThat(lastParseResult.isAlcoholFree()).isTrue();
         assertThat(lastParseResult.getDetectedSafeFattyAlcohols()).isNotEmpty();
         currentProduct.addSafetyLabel(safetyState);
         productRepository.save(currentProduct);
+    }
+
+    @Then("tuyệt đối không kích hoạt cờ cảnh báo {string} cho sản phẩm {string}")
+    public void tuyet_doi_khong_kich_hoat_co_canh_bao_voi_ten(String flagName, String productName) {
+        Product p = productRepository.findByName(productName).orElse(currentProduct);
+        assertThat(p).isNotNull();
+        assertThat(p.hasWarningFlag(WarningFlag.of(flagName))).isFalse();
     }
 
     @Then("tuyệt đối không kích hoạt cờ cảnh báo {string}")
